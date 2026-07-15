@@ -10,6 +10,7 @@ import profileRouter from "./router/profile.router.js";
 import postRouter from "./router/post.routes.js";
 import commentRouter from "./router/comment.router.js";
 import mediaRouter from "./router/media.router.js";
+import searchRouter from "./router/search.router.js";
 
 const app = express();
 connectDB();
@@ -37,6 +38,7 @@ app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/posts", postRouter);
 app.use("/api/v1/comments", commentRouter);
 app.use("/api/v1/media", mediaRouter);
+app.use("/api/v1/search", searchRouter);
 
 app.use(errorMiddleware);
 export default app;

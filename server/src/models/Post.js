@@ -54,6 +54,8 @@ const Post = sequelize.define(
       defaultValue: [],
     },
 
+
+
     // "draft"     → Story #21 (Save as Draft)
     // "published" → Story #20 (Publish)
     // "archived"  → soft-removed from listings but not deleted

@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Post, Blog, User } from "../models/index.js";
+import { Post, Blog, User, sequelize } from "../models/index.js";
 import { BaseRepository } from "./base.repository.js";
 import { AppError } from "../utils/AppError.js";
 
@@ -102,6 +102,47 @@ export class PostRepository extends BaseRepository {
     return await this.model.findAll({
       where: { authorId, blogId },
       order: [["createdAt", "DESC"]],
+    });
+  }
+
+  async searchAndDiscover(options = {}) {
+    const { query, blogSlug, sortBy = "latest", limit = 10, offset = 0 } = options;
+
+    const where = { status: "published" };
+
+    // Search by keyword in title, contentHtml, or excerpt
+    if (query) {
+      const searchVal = `%${query.toLowerCase()}%`;
+      where[Op.or] = [
+        sequelize.where(sequelize.fn("LOWER", sequelize.col("Post.title")), "LIKE", searchVal),
+        sequelize.where(sequelize.fn("LOWER", sequelize.col("Post.excerpt")), "LIKE", searchVal),
+        sequelize.where(sequelize.fn("LOWER", sequelize.col("Post.content_html")), "LIKE", searchVal),
+      ];
+    }
+
+    // Filter by blogSlug if provided
+    if (blogSlug) {
+      const blog = await Blog.findOne({ where: { slug: blogSlug } });
+      if (blog) {
+        where.blogId = blog.id;
+      } else {
+        return { rows: [], count: 0 };
+      }
+    }
+
+    // Sort mapping
+    let order = [["publishedAt", "DESC"]];
+    if (sortBy === "popular") {
+      order = [["viewCount", "DESC"], ["publishedAt", "DESC"]];
+    }
+
+    return await this.model.findAndCountAll({
+      where,
+      include: postListIncludes,
+      attributes: { exclude: ["contentHtml"] },
+      order,
+      limit,
+      offset,
     });
   }
 }
